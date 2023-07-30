@@ -36,34 +36,28 @@ mpicxx main.o $ELSES_ROOT/src/src.a $ELSES_ROOT/xmlf90-1.2g-elses/macros/lib/lib
 exec_supercell=$ELSES_ROOT/make_supercell_C60_FCCs_w_noise/a.out
 exec_elses_xml_generate=$ELSES_ROOT/bin/elses-xml-generate
 
-mol_folder=$ELSES_ROOT/sample/sample_non_geno/C60_fcc2x2x2_disorder_expand_2x1x1
-
 # Generate the points for the ELSES matrix.
 ny=1
 nz=1
-source_file=$mol_folder/C60_fcc2x2x2_disorder_expand_2x1x1_20220912.xyz
 
-fcc_xml_file=$mol_folder/C60_fcc2x2x2_disorder_expand_2x1x1_20220912.xml
-xml_config_file=$mol_folder/config.xml
-
+mol_folder=$ELSES_ROOT/sample/sample_non_geno/C60_fcc2x2x2_disorder_expand_1x1x1
+source_file=$mol_folder/C60_fcc2x2x2_20220727.xyz
+fcc_xml_file=C60_fcc.xml
 
 # Run the ELPA example with various matrix sizes.
 
 export ELPA_DEFAULT_solver=ELPA_SOLVER_2STAGE
+export OMP_NUM_THREADS=64
+export OMP_PROC_BIND=close
 
-for nx in 1; do
-    # Generate the geometry file.
+for nx in 1 2; do
+    # Generate the xml file from the source geometry depenending on the number of repetitions specified.
     $exec_supercell $nx $ny $nz $source_file
 
     # generate config.xml.
-    $exec_elses_xml_generate $ELSES_ROOT/make_supercell_C60_FCCs_w_noise/generate.xml \
-                             $mol_folder/C60_fcc2x2x2_disorder_expand_2x1x1_20220912.xml
+    $exec_elses_xml_generate $ELSES_ROOT/make_supercell_C60_FCCs_w_noise/generate.xml $fcc_xml_file
 
-    # copy config file into Hatrix root
-    cp $fcc_xml_file .
-    cp $xml_config_file .
+    N=$(($nx * $ny * $nz * 1 * 1 * 1 * 32 * 60 * 4))
 
-    N=$(($nx * $ny * $nz * 2 * 1 * 1 * 32 * 60 * 4))
-
-    mpirun --mca opal_warn_on_missing_libcuda 0 -n 1 ./a.out $N
+    mpirun --mca opal_warn_on_missing_libcuda 0  -n 1 ./a.out $N
 done

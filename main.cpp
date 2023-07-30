@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <chrono>
+
 #include <elpa/elpa.h>
 
 #include "mpi.h"
@@ -61,8 +63,7 @@ indxl2g(int indxloc, int nb, int iproc, int nprocs) {
 
 int main(int argc, char* argv[]) {
   int N = atoi(argv[1]);
-  int NB = 256;                 // default scalapack block size.
-
+  int NB = 240;                 // default scalapack block size.
 
   std::cout << "N: " << N << std::endl;
 
@@ -83,9 +84,10 @@ int main(int argc, char* argv[]) {
   int info, desc[9];
   descinit_(desc, &N, &N, &NB, &NB, &ZERO, &ZERO, &BLACS_CONTEXT, &local_nrows, &info);
   std::vector<double> A((int64_t)local_nrows * (int64_t)local_ncols);
-#pragma omp parallel for collapse(2)
+
   for (int i = 0; i < local_nrows; i++) {
     for (int j = 0; j < local_ncols; j++) {
+      // std::cout << "i: " << i << " j: " << j << std::endl;
       long int g_row = indxl2g(i + 1, NB, MYROW, MPIGRID[0]);
       long int g_col = indxl2g(j + 1, NB, MYCOL, MPIGRID[1]);
       double val;
@@ -96,6 +98,9 @@ int main(int argc, char* argv[]) {
   }
 
 
+  std::cout << "----- DONE GEN ------ \n";
+
+  std::vector<double> ev(N);
   bool elpa_success = true;
   std::string elpa_error_str = "";
   elpa_t handle;
@@ -122,9 +127,22 @@ int main(int argc, char* argv[]) {
   assert_elpa_ok(error, "ELPA setup failed",
                  elpa_success, elpa_error_str);
 
+  double elpa_time;
+  if (elpa_success) {
+    std::cout << "Now calculating eigenvalues...\n";
+    auto start_time = std::chrono::system_clock::now();
+    elpa_eigenvalues(handle, A.data(), ev.data(), &error);
+    auto stop_time = std::chrono::system_clock::now();
+    elpa_time = std::chrono::duration_cast<std::chrono::milliseconds>(stop_time - start_time).count();
+  }
+
+  elpa_deallocate(handle, &error);
+  elpa_uninit(&error);
   Cblacs_gridexit(BLACS_CONTEXT);
   Cblacs_exit(1);
   MPI_Finalize();
+
+  std::cout << "ELPA_TIME: " << N << "," << elpa_time << std::endl;
 
   return 0;
 }
