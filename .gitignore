@@ -35,3 +35,4 @@ elses/
 *.xml
 *.xyz
 elpa/
+*txt

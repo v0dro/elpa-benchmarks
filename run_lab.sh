@@ -21,10 +21,16 @@ ELSES_ROOT=/home/sameer.deshmukh/ELSES_mat_calc-master
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$PWD/elpa/build/lib/pkgconfig
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/elpa/build/lib
 
-mpicxx $(pkg-config --cflags elpa) $(pkg-config --libs elpa) -I$ELSES_ROOT \
+rm a.out
+
+mpicxx -g $(pkg-config --cflags elpa) \
+       -I$ELSES_ROOT -m64  -I"${MKLROOT}/include" \
+        main.cpp -c -o main.o
+
+mpicxx main.o $ELSES_ROOT/src/src.a $ELSES_ROOT/xmlf90-1.2g-elses/macros/lib/libflib.a \
        -L${MKLROOT}/lib/intel64 -lmkl_scalapack_lp64 -Wl,--no-as-needed \
        -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lmkl_blacs_openmpi_lp64 \
-       -lgomp -lpthread -lm -ldl  -m64  -I"${MKLROOT}/include" main.cpp -o a.out
+       -lgomp -lpthread -lm -ldl $(pkg-config --libs elpa) -lgfortran -o a.out
 
 # ELSES matrix generation.
 exec_supercell=$ELSES_ROOT/make_supercell_C60_FCCs_w_noise/a.out
@@ -39,6 +45,9 @@ source_file=$mol_folder/C60_fcc2x2x2_disorder_expand_2x1x1_20220912.xyz
 
 fcc_xml_file=$mol_folder/C60_fcc2x2x2_disorder_expand_2x1x1_20220912.xml
 xml_config_file=$mol_folder/config.xml
+
+
+# Run the ELPA example with various matrix sizes.
 
 export ELPA_DEFAULT_solver=ELPA_SOLVER_2STAGE
 
