@@ -1,4 +1,8 @@
 #!/bin/bash
+#YBATCH -r epyc-7502_8
+#SBATCH -N 1
+#SBATCH -J ELPA
+#SBATCH --time=24:00:00
 
 source ~/.bashrc
 
@@ -50,7 +54,7 @@ export ELPA_DEFAULT_solver=ELPA_SOLVER_2STAGE
 export OMP_NUM_THREADS=64
 export OMP_PROC_BIND=close
 
-for nx in 1 2; do
+for nx in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
     # Generate the xml file from the source geometry depenending on the number of repetitions specified.
     $exec_supercell $nx $ny $nz $source_file
 
