@@ -54,9 +54,11 @@ export ELPA_DEFAULT_solver=ELPA_SOLVER_2STAGE
 export OMP_NUM_THREADS=64
 export OMP_PROC_BIND=close
 
-for nx in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+for nx in 3 4 5 6 7 8 9 10 11 12 13; do
     # Generate the xml file from the source geometry depenending on the number of repetitions specified.
     $exec_supercell $nx $ny $nz $source_file
+
+    cp C60_fcc.xyz $ELSES_ROOT/make_supercell_C60_FCCs_w_noise
 
     # generate config.xml.
     $exec_elses_xml_generate $ELSES_ROOT/make_supercell_C60_FCCs_w_noise/generate.xml $fcc_xml_file
