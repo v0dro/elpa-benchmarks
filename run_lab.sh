@@ -54,7 +54,7 @@ export ELPA_DEFAULT_solver=ELPA_SOLVER_2STAGE
 export OMP_NUM_THREADS=64
 export OMP_PROC_BIND=close
 
-for nx in 3 4 5 6 7 8 9 10 11 12 13; do
+for nx in 6 7 8 9 10 11; do
     # Generate the xml file from the source geometry depenending on the number of repetitions specified.
     $exec_supercell $nx $ny $nz $source_file
 

@@ -83,17 +83,20 @@ int main(int argc, char* argv[]) {
   init_elses_state();
   int info, desc[9];
   descinit_(desc, &N, &N, &NB, &NB, &ZERO, &ZERO, &BLACS_CONTEXT, &local_nrows, &info);
-  std::vector<double> A((int64_t)local_nrows * (int64_t)local_ncols);
+  long int A_size = (int64_t)local_nrows * (int64_t)local_ncols;
+  std::vector<double> A(A_size, 0);
 
+  std::cout << "-- START MAT GET --\n";
+
+#pragma omp parallel for collapse(2)
   for (int i = 0; i < local_nrows; i++) {
     for (int j = 0; j < local_ncols; j++) {
-      // std::cout << "i: " << i << " j: " << j << std::endl;
       long int g_row = indxl2g(i + 1, NB, MYROW, MPIGRID[0]);
       long int g_col = indxl2g(j + 1, NB, MYCOL, MPIGRID[1]);
-      double val;
+      double val = -1;
       get_elses_matrix_value(&g_row, &g_col, &val);
 
-      A[i + j * local_nrows] = val;
+      A[(long int)i + (long int)j * (long int)local_nrows] = val;
     }
   }
 
